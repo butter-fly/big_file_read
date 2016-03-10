@@ -26,7 +26,6 @@ public class App {
 	 */
 	public static void main(String[] args) {
 		List<String> lineList = ReadFile2Memory.read(ConfigUtil.getValue("log.source.path"));
-		//new DataDealThread().processLineTask(lineList, 20);
 		new DealTask().start(lineList);
 	}
 }
