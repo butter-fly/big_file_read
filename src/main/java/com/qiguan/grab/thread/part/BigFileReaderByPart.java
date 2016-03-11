@@ -24,7 +24,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import com.qiguan.grab.util.StringUtil;
-import com.qiguan.grab.word.CheckSensitiveWord;
 import com.sun.istack.internal.logging.Logger;
 
 /**  
@@ -57,7 +56,6 @@ public class BigFileReaderByPart {
 	private AtomicLong counter = new AtomicLong(0); // 计数
 	private BlockingQueue<String> queue; // 队列
 	private Map<String, String> filterMap; // 过滤URL
-	private CheckSensitiveWord checkSensitiveWord;
 	/**
 	 * @param file
 	 * @param handle
@@ -80,7 +78,6 @@ public class BigFileReaderByPart {
 		startEndPairs = new HashSet<BigFileReaderByPart.StartEndPair>();
 		this.queue = queue;
 		this.filterMap =  new HashMap<String, String>();
-		checkSensitiveWord = new CheckSensitiveWord();
 	}
 	
 	/**
@@ -106,6 +103,7 @@ public class BigFileReaderByPart {
 			}
 		});
 		logger.info("总分配分片数量：" + startEndPairs.size());
+		// 线程池执行任务
 		for (StartEndPair pair : startEndPairs) {
 			logger.info("分配分片：" + pair);
 			this.executorService.execute(new SliceReaderTask(pair));
@@ -175,21 +173,15 @@ public class BigFileReaderByPart {
 		}
 		if (line != null && !"".equals(line)) {
 			this.handle.handle(line);
-			// 抓取内容
-			String [] lineArray = line.split("	");
-			if (null != lineArray && lineArray.length == 3 && null != lineArray[2]) {
-				if (!checkSensitiveWord.isContaintSensitiveWord(lineArray[2])) {
-					// 如果.html直接访问
-					if (!filterMap.containsKey(StringUtil.getDomain(lineArray[2]))) {
-						String contentStr = grabTitle(lineArray[2]);
-						if (null != contentStr) {
-							queue.add(contentStr);
-						}
-					} 
-					logger.info("第" + counter.get() + "行 : 已请求" + line);
-				} else {
-					logger.info("第" + counter.get() + "行 : 已过滤URL: " + line);
+			// 如果.html直接访问
+			if (!filterMap.containsKey(StringUtil.getDomain(line))) {
+				logger.info("第" + counter.get() + "行 : 已请求" + line);
+				String contentStr = grabTitle(line.trim());
+				if (null != contentStr) {
+					queue.add(contentStr);
 				}
+			} else {
+				logger.info("第" + counter.get() + "行 : 已过滤URL: " + line);
 			}
 			counter.incrementAndGet(); // 递增 保证数据计数同步
 		}

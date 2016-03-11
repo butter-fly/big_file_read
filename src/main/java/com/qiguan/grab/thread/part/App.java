@@ -46,12 +46,12 @@ public class App {
 		logger.info("开始时间：" + new Date());
 		// 声明缓存队列
 		BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
-		BigFileReaderByPart.Builder builder = new BigFileReaderByPart.Builder(ConfigUtil.getValue("log.source.path"), new IDataHandle() {
+		BigFileReaderByPart.Builder builder = new BigFileReaderByPart.Builder(ConfigUtil.getValue("log.new.path"), new IDataHandle() {
 			public void handle(String line) {
 				
 			}
 		}, queue);
-		builder.withCharset("UTF-8").withTreahdSize(ConfigUtil.getIntValue("reader.part.threadNum")).withBufferSize(524288);
+		builder.withCharset("UTF-8").withTreahdSize(ConfigUtil.getIntValue("reader.part.threadNum")).withBufferSize(1024 * 1024);
 		BigFileReaderByPart bigFileReader = builder.build();
 		bigFileReader.start();
 		
