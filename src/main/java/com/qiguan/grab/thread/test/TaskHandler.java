@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import com.qiguan.grab.util.StringUtil;
-import com.sun.istack.internal.logging.Logger;
 
 /**  
  * <pre>

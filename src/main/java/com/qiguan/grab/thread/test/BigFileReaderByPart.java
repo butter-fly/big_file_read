@@ -16,8 +16,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
+
 import com.qiguan.grab.thread.part.IDataHandle;
-import com.sun.istack.internal.logging.Logger;
 
 /**  
  * <pre>

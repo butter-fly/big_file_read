@@ -1,5 +1,6 @@
 package com.qiguan.grab.thread.memory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,8 @@ public class DealTask {
 	 * 解析html
 	 */
 	public void start(final List<String> list) {
-		for (final String line : list) {
+		List<String> lineList = Collections.synchronizedList(list);
+		for (final String line : lineList) {
 			// 过滤请求URL处理
 			if (!filterMap.containsKey(StringUtil.getDomain(line))) {
 				// 提交任务
