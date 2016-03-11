@@ -63,6 +63,7 @@ public class App {
 		
 		// 关闭线程
 		executor.shutdown();
+		bigFileReader.shutdown();
 		executor.awaitTermination(5, TimeUnit.DAYS);
 		
 		// 关闭数据流

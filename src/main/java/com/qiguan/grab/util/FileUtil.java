@@ -264,7 +264,7 @@ public class FileUtil {
 		try {
 //			read("D://grab/file/url_lineout.txt", "D://grab/file/grab_urls.txt");
 //			read("G://url_lineout.txt/url_lineout.txt", "F://url_lineout.txt/url_lineout_clean.txt");
-			System.out.println(getFileLines("g://url_lineout.txt/url_lineout_new.txt"));
+			System.out.println(getFileLines("G://url_lineout.txt/url_lineout_new.txt"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

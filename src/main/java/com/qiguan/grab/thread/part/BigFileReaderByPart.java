@@ -70,7 +70,7 @@ public class BigFileReaderByPart {
 		this.bufferSize = bufferSize;
 		this.threadSize = threadSize;
 		try {
-			this.rAccessFile = new RandomAccessFile(file,"rw");
+			this.rAccessFile = new RandomAccessFile(file,"r");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -149,6 +149,17 @@ public class BigFileReaderByPart {
 	}
 	
 	/**
+	 * @param bytes
+	 * @throws UnsupportedEncodingException
+	 */
+	private void handle(String line) throws UnsupportedEncodingException{
+		this.handle.handle(line);
+		counter.incrementAndGet(); // 递增 保证数据计数同步
+		line = null;
+		System.gc();
+	}
+	
+	/**
 	 * 关闭
 	 */
 	public void shutdown(){
@@ -160,76 +171,7 @@ public class BigFileReaderByPart {
 		this.executorService.shutdown();
 	}
 	
-	/**
-	 * @param bytes
-	 * @throws UnsupportedEncodingException
-	 */
-	private void handle(byte[] bytes) throws UnsupportedEncodingException{
-		String line = null;
-		if (this.charset == null) {
-			line = new String(bytes);
-		} else {
-			line = new String(bytes, charset);
-		}
-		if (line != null && !"".equals(line)) {
-			this.handle.handle(line);
-			// 如果.html直接访问
-			if (!filterMap.containsKey(StringUtil.getDomain(line))) {
-				logger.info("第" + counter.get() + "行 : 已请求" + line);
-				String contentStr = grabTitle(line.trim());
-				if (null != contentStr) {
-					queue.add(contentStr);
-				}
-			} else {
-				logger.info("第" + counter.get() + "行 : 已过滤URL: " + line);
-			}
-			counter.incrementAndGet(); // 递增 保证数据计数同步
-		}
-	}
 	
-	/**
-	 * 抓取网站url的title和keywords
-	 * 
-	 * @param url
-	 * @return
-	 */
-	public String grabTitle(String url) {
-		Document doc = null;
-		try {
-			Connection con = Jsoup.connect(url).timeout(5000);
-			con.userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
-			doc = con.get();
-		} catch (Exception e) {
-			//logger.info(url);
-			String domainStr = StringUtil.getDomain(url);
-			if (!filterMap.containsKey(domainStr)) {
-				filterMap.put(domainStr, url); //过滤
-			}
-			return null;
-		}
-		if (null == doc) return null;
-		
-		
-		String title  = doc.title();
-		String keywords = null;
-		Element el = doc.getElementsByAttributeValue("name", "keywords").first();
-		if (null != el) {
-			keywords = el.attr("content");
-		} 
-		if (StringUtil.isNullOrEmpty(title) && StringUtil.isNullOrEmpty(keywords)) {
-			return null;
-		}
-		
-		if (StringUtil.isNullOrEmpty(title)) {
-			title = "null";
-		}
-		if (StringUtil.isNullOrEmpty(keywords)) {
-			title = "null";
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append(doc.title()).append("-&-").append(keywords);
-		return sb.toString();
-	}
 	
 	/**  
 	 * <pre>
@@ -338,7 +280,7 @@ public class BigFileReaderByPart {
 					for (int i = 0; i < readLength; i++) {
 						byte tmp = readBuff[i];
 						if (tmp == '\n' || tmp == '\r') {
-							handle(bos.toByteArray());
+							handleByte(bos.toByteArray());
 							bos.reset();
 						} else {
 							bos.write(tmp);
@@ -347,12 +289,78 @@ public class BigFileReaderByPart {
 				}
 				
 				if (bos.size() > 0) {
-					handle(bos.toByteArray());
+					handleByte(bos.toByteArray());
 				}
 				cyclicBarrier.await();// 等待其他线程操作完毕
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+		
+		/**
+		 * @param bytes
+		 * @throws UnsupportedEncodingException
+		 */
+		private void handleByte(byte[] bytes) throws UnsupportedEncodingException{
+			String line = new String(bytes, charset);
+			if (line != null && !"".equals(line)) {
+				// 如果.html直接访问
+				if (!filterMap.containsKey(StringUtil.getDomain(line))) {
+					logger.info("第" + counter.get() + "行 : 已请求" + line);
+					String contentStr = grabTitle(line.trim());
+					if (null != contentStr) {
+						queue.add(contentStr);
+					}
+				} else {
+					logger.info("第" + counter.get() + "行 : 已过滤URL: " + line);
+				}
+				handle(line);
+			}
+		}
+		
+		/**
+		 * 抓取网站url的title和keywords
+		 * 
+		 * @param url
+		 * @return
+		 */
+		public String grabTitle(String url) {
+			Document doc = null;
+			Connection con = null;
+			try {
+				con = Jsoup.connect(url);
+				con.userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
+				doc = con.get();
+			} catch (Exception e) {
+				String domainStr = StringUtil.getDomain(url);
+				if (!filterMap.containsKey(domainStr)) {
+					filterMap.put(domainStr, url); //过滤
+				}
+				return null;
+			}
+			if (null == doc) return null;
+			String title  = doc.title();
+			String keywords = null;
+			Element el = doc.getElementsByAttributeValue("name", "keywords").first();
+			if (null != el) {
+				keywords = el.attr("content");
+			} 
+			if (StringUtil.isNullOrEmpty(title) && StringUtil.isNullOrEmpty(keywords)) {
+				return null;
+			}
+			
+			if (StringUtil.isNullOrEmpty(title)) {
+				title = "null";
+			}
+			if (StringUtil.isNullOrEmpty(keywords)) {
+				title = "null";
+			}
+			StringBuilder sb = new StringBuilder();
+			sb.append(doc.title()).append("-&-").append(keywords);
+			doc = null;
+			con = null;
+			System.gc();
+			return sb.toString();
 		}
 		
 	}
