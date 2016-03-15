@@ -47,6 +47,11 @@ public class CheckSensitiveWord {
 		return flag;
 	}
 	
+	public void add(String word) {
+		if (null != keyWordSet) {
+			keyWordSet.add(word);
+		}
+	}
 	
 	/**
 	 * @return the {@link #keyWordSet}
@@ -58,7 +63,7 @@ public class CheckSensitiveWord {
 	public static void main(String[] args) {
 		CheckSensitiveWord filter = new CheckSensitiveWord();
 		System.out.println("敏感词的数量：" + filter.keyWordSet.size());
-		String string = "http://www.lequ.com/shop/api/action/point/t=1456761666559";
+		String string = "www.long88.com";
 		long beginTime = System.currentTimeMillis();
 		boolean set = filter.isContaintSensitiveWord(string);
 		long endTime = System.currentTimeMillis();

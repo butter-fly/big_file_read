@@ -26,10 +26,10 @@ public class CountFileWords {
 	public static void main(String[] args) throws Exception {
 		File wf = new File("d://SensitiveWord.txt");
 		// 文件分片
-		List<Point> pointList = new FileSpliterUtil().blocking(wf, 1);
+		List<Point> pointList = FileSpliterUtil.blocking(wf, 1);
 		// 线程池
-		ExecutorService executor = Executors.newCachedThreadPool();
-		List<CountWords> threadList = new ArrayList<CountWords>(pointList.size());
+		final ExecutorService executor = Executors.newCachedThreadPool();
+		final List<CountWords> threadList = new ArrayList<CountWords>(pointList.size());
 		for (int i = 0; i < pointList.size(); i++) {
 			threadList.add(new CountWords(wf, pointList.get(i).getSkipSize(), pointList.get(i).getLength()));
 			executor.execute(threadList.get(i));

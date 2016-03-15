@@ -51,7 +51,7 @@ public class App {
 				
 			}
 		}, queue);
-		builder.withCharset("UTF-8").withTreahdSize(ConfigUtil.getIntValue("reader.part.threadNum")).withBufferSize(1024 * 1024);
+		builder.withCharset("UTF-8").withTreahdSize(ConfigUtil.getIntValue("reader.part.threadNum")).withBufferSize(524288);
 		BigFileReaderByPart bigFileReader = builder.build();
 		bigFileReader.start();
 		

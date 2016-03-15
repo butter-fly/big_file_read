@@ -6,14 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -24,6 +26,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import com.qiguan.grab.util.FileSpliterUtil;
 import com.qiguan.grab.util.StringUtil;
 
 /**  
@@ -47,12 +50,13 @@ public class BigFileReaderByPart {
 	private int threadSize; // 线程大小
 	private String charset; // 编码
 	private int bufferSize; // 缓存字节大小 
+	private File file;// 
 	private IDataHandle handle; // 数据返回定义接口
 	private ExecutorService  executorService; // 线程池
 	private long fileLength; // 文件长度
 	private RandomAccessFile rAccessFile; // 文件读写对象
 	private Set<StartEndPair> startEndPairs; // 分片
-	private CyclicBarrier cyclicBarrier;
+//	private CyclicBarrier cyclicBarrier;
 	private AtomicLong counter = new AtomicLong(0); // 计数
 	private BlockingQueue<String> queue; // 队列
 	private Map<String, String> filterMap; // 过滤URL
@@ -65,6 +69,7 @@ public class BigFileReaderByPart {
 	 */
 	private BigFileReaderByPart(File file,IDataHandle handle, BlockingQueue<String> queue, String charset,int bufferSize,int threadSize){
 		this.fileLength = file.length();
+		this.file = file;
 		this.handle = handle;
 		this.charset = charset;
 		this.bufferSize = bufferSize;
@@ -86,27 +91,48 @@ public class BigFileReaderByPart {
 	public void start(){
 		long everySize = this.fileLength / this.threadSize;
 		try {
+			logger.info("the everySize is: " + everySize);
 			calculateStartEnd(0, everySize);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
 
-		final long startTime = System.currentTimeMillis();
-		cyclicBarrier = new CyclicBarrier(startEndPairs.size(), new Runnable() {
-			/* (non-Javadoc)
-			 * @see java.lang.Runnable#run()
-			 */
-			public void run() {
-				logger.info("use time: " + (System.currentTimeMillis() - startTime));
-				logger.info("all line: " + counter.get());
-			}
-		});
+//		final long startTime = System.currentTimeMillis();
+//		cyclicBarrier = new CyclicBarrier(startEndPairs.size(), new Runnable() {
+//			/* (non-Javadoc)
+//			 * @see java.lang.Runnable#run()
+//			 */
+//			public void run() {
+//				logger.info("use time: " + (System.currentTimeMillis() - startTime));
+//				logger.info("all line: " + counter.get());
+//				// 关闭
+//				shutdown(); 
+//			}
+//		});
 		logger.info("总分配分片数量：" + startEndPairs.size());
 		// 线程池执行任务
 		for (StartEndPair pair : startEndPairs) {
-			logger.info("分配分片：" + pair);
+			System.out.println("分配分片：" + pair);
 			this.executorService.execute(new SliceReaderTask(pair));
+		}
+	}
+	
+	/**
+	 * 文件分片
+	 */
+	public void split() {
+		String filePath = file.getAbsolutePath();
+		logger.info(filePath + ":" + file.getName());
+		// 文件分块
+		try {
+			List<File> fileList = FileSpliterUtil.splitByMappedByteBuffer(filePath, threadSize, "d://");
+			System.out.println("文件分片：" + fileList.size());
+			for (File f : fileList) {
+				this.executorService.execute(new SplitReaderTask(f));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -248,6 +274,132 @@ public class BigFileReaderByPart {
 	 * 
 	 * </pre>
 	 */  
+	private class SplitReaderTask implements Runnable{
+		private File inputFile;
+		/**
+		 * @param start 	read position (include)
+		 * @param end 	the position read to(include)
+		 */
+		public SplitReaderTask(File inputFile) {
+			this.inputFile = inputFile;
+		}
+		
+		/* (non-Javadoc)
+		 * @see java.lang.Runnable#run()
+		 */
+		public void run() {
+			byte[] bytes = new byte[1024];
+			ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+			FileChannel channel = null;
+			try { 
+				// 得到一个通道
+				channel = new RandomAccessFile(inputFile, "r").getChannel();
+				while (channel.read(byteBuffer) != -1) {
+					int size = byteBuffer.position();
+					byteBuffer.rewind();
+					byteBuffer.get(bytes);
+					String line = new String(bytes, 0, size);
+					byteBuffer.clear();
+					logger.info(line);
+					handleByte(line);
+					line = null;
+				}
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					channel.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} 
+			}
+		}
+		
+		/**
+		 * @param bytes
+		 * @throws UnsupportedEncodingException
+		 */
+		private void handleByte(String line) throws UnsupportedEncodingException{
+			if (line != null && !"".equals(line)) {
+				// 如果.html直接访问
+				if (!filterMap.containsKey(StringUtil.getDomain(line))) {
+					logger.info(Thread.currentThread().getName() + " --- 第" + counter.get() + "行 : 已请求" + line);
+					String contentStr = grabTitle(line.trim());
+					if (null != contentStr) {
+						queue.add(contentStr);
+					}
+				} else {
+					logger.info(Thread.currentThread().getName() + " --- 第" + counter.get() + "行 : 已过滤URL: " + line);
+				}
+				handle(line);
+			}
+		}
+		
+		/**
+		 * 抓取网站url的title和keywords
+		 * 
+		 * @param url
+		 * @return
+		 */
+		public String grabTitle(String url) {
+			Document doc = null;
+			Connection con = null;
+			try {
+				con = Jsoup.connect(url);
+				con.userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
+				doc = con.get();
+			} catch (Exception e) {
+				// 过滤
+				String domainStr = StringUtil.getDomain(url);
+				if (!filterMap.containsKey(domainStr)) {
+					filterMap.put(domainStr, domainStr); 
+				}
+				return null;
+			}
+			if (null == doc) return null;
+			String title  = doc.title();
+			String keywords = null;
+			Element el = doc.getElementsByAttributeValue("name", "keywords").first();
+			if (null != el) {
+				keywords = el.attr("content");
+			} 
+			if (StringUtil.isNullOrEmpty(title) && StringUtil.isNullOrEmpty(keywords)) {
+				return null;
+			}
+			
+			if (StringUtil.isNullOrEmpty(title)) {
+				title = "null";
+			}
+			if (StringUtil.isNullOrEmpty(keywords)) {
+				title = "null";
+			}
+			StringBuilder sb = new StringBuilder();
+			sb.append(doc.title()).append("-&-").append(keywords);
+			doc = null;
+			con = null;
+			System.gc();
+			return sb.toString();
+		}
+		
+	}
+	
+	/**  
+	 * <pre>
+	 * Description	分片任务数据NIO方式读取处理线程任务
+	 * Copyright:	Copyright (c)2016
+	 * Company:		杭州启冠网络技术有限公司
+	 * Author:		Administrator
+	 * Version: 	1.0
+	 * Create at:	2016年3月7日 下午2:59:39  
+	 *  
+	 * Modification History:  
+	 * Date         Author      Version     Description 
+	 * ------------------------------------------------------------------  
+	 * 
+	 * </pre>
+	 */  
 	private class SliceReaderTask implements Runnable{
 		private long start;
 		private long sliceSize;
@@ -291,7 +443,7 @@ public class BigFileReaderByPart {
 				if (bos.size() > 0) {
 					handleByte(bos.toByteArray());
 				}
-				cyclicBarrier.await();// 等待其他线程操作完毕
+//				cyclicBarrier.await();// 等待其他线程操作完毕
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -306,13 +458,13 @@ public class BigFileReaderByPart {
 			if (line != null && !"".equals(line)) {
 				// 如果.html直接访问
 				if (!filterMap.containsKey(StringUtil.getDomain(line))) {
-					logger.info("第" + counter.get() + "行 : 已请求" + line);
+					logger.info(Thread.currentThread().getName() + " --- 第" + counter.get() + "行 : 已请求" + line);
 					String contentStr = grabTitle(line.trim());
 					if (null != contentStr) {
 						queue.add(contentStr);
 					}
 				} else {
-					logger.info("第" + counter.get() + "行 : 已过滤URL: " + line);
+					logger.info(Thread.currentThread().getName() + " --- 第" + counter.get() + "行 : 已过滤URL: " + line);
 				}
 				handle(line);
 			}
@@ -332,9 +484,10 @@ public class BigFileReaderByPart {
 				con.userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
 				doc = con.get();
 			} catch (Exception e) {
+				// 过滤
 				String domainStr = StringUtil.getDomain(url);
 				if (!filterMap.containsKey(domainStr)) {
-					filterMap.put(domainStr, url); //过滤
+					filterMap.put(domainStr, domainStr); 
 				}
 				return null;
 			}

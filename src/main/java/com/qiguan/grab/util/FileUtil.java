@@ -99,7 +99,7 @@ public class FileUtil {
 	/**
 	 * B方法追加文件：使用FileWriter
 	 */
-	public static synchronized void append2File(String fileName, String content) {
+	public static void append2File(String fileName, String content) {
 		try {
 			// 打开一个写文件器，构造函数中的第二个参数true表示以追加形式写文件
 			FileWriter writer = new FileWriter(fileName, true);
@@ -264,7 +264,8 @@ public class FileUtil {
 		try {
 //			read("D://grab/file/url_lineout.txt", "D://grab/file/grab_urls.txt");
 //			read("G://url_lineout.txt/url_lineout.txt", "F://url_lineout.txt/url_lineout_clean.txt");
-			System.out.println(getFileLines("G://url_lineout.txt/url_lineout_new.txt"));
+			readFile("F://url_lineout.txt/url_lineout_new.txt");
+//			System.out.println(getFileLines("G://url_lineout.txt/url_lineout_new.txt"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

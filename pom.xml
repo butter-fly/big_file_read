@@ -4,7 +4,7 @@
 
 	<groupId>com.qiguan</groupId>
 	<artifactId>grab</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 
 	<name>grab</name>
@@ -85,7 +85,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.qiguan.grab.thread.part.App</mainClass>
+							<mainClass>com.qiguan.grab.thread.part.FileConvert</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

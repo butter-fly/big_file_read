@@ -52,6 +52,7 @@ public class FileSpliterUtil {
 				// 声明对象
 				fs = new FileWriter(sqlitPath + "\\" + fileName + "_" + j + ext, false);
 				fw = new BufferedWriter(fs);
+				
 				// 将对象装入集合
 				WriterLists.add(fs);
 				fwLists.add(fw);
@@ -91,11 +92,12 @@ public class FileSpliterUtil {
 	/**
 	 * 使用IO流切分指定文件
 	 */
-	public List<File> splitByStream(String file, int piece, String outputDirectiry) throws IOException {
+	public static List<File> splitByStream(String file, int piece, String outputDirectiry) throws IOException {
 		List<File> result = new ArrayList<File>();
-		List<Point> list = blocking(new File(file), piece);
+		File tFile = new File(file);
+		List<Point> list = blocking(tFile, piece);
 		for (int i = 0; i < list.size(); i++) {
-			File outputFile = new File(outputDirectiry + i + "_byStream.txt");
+			File outputFile = new File(outputDirectiry + i + tFile.getName());
 			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
 			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outputFile));
 			in.skip(list.get(i).getSkipSize());
@@ -116,11 +118,12 @@ public class FileSpliterUtil {
 	 * 使用內存映射文件切分指定文件
 	 */
 	@SuppressWarnings("resource")
-	public List<File> splitByMappedByteBuffer(String file, int piece, String outputDirectiry) throws IOException {
+	public static List<File> splitByMappedByteBuffer(String file, int piece, String outputDirectiry) throws IOException {
 		List<File> result = new ArrayList<File>();
-		List<Point> list = blocking(new File(file), piece);
+		File tFile = new File(file);
+		List<Point> list = blocking(tFile, piece);
 		for (int i = 0; i < list.size(); i++) {
-			File outputFile = new File(outputDirectiry + i + "_byMappedByteBuffer.txt");
+			File outputFile = new File(outputDirectiry + File.separator + i + tFile.getName());
 			FileChannel in = new RandomAccessFile(file, "r").getChannel();
 			FileChannel out = new RandomAccessFile(outputFile, "rw").getChannel();
 			MappedByteBuffer outBuffer = out.map(MapMode.READ_WRITE, 0, list.get(i).length);
@@ -140,10 +143,11 @@ public class FileSpliterUtil {
 	@SuppressWarnings("resource")
 	public List<File> splitByChannel(String file, int piece, String outputDirectiry) throws IOException {
 		List<File> result = new ArrayList<File>();
-		List<Point> list = blocking(new File(file), piece);
+		File inputFile = new File(file);
+		List<Point> list = blocking(inputFile, piece);
 		for (int i = 0; i < list.size(); i++) {
-			File outputFile = new File(outputDirectiry + i + "_byChannel.txt");
-			FileChannel in = new FileInputStream(file).getChannel();
+			File outputFile = new File(outputDirectiry + i + "_" + inputFile.getName());
+			FileChannel in = new FileInputStream(inputFile).getChannel();
 			FileChannel out = new FileOutputStream(outputFile).getChannel();
 			ByteBuffer buffer = ByteBuffer.allocate(list.get(i).getLength());
 			in.read(buffer, list.get(i).getSkipSize());
@@ -159,7 +163,7 @@ public class FileSpliterUtil {
 	/**
 	 * 对文件进行切分 1.先根据指定的参数分片,每个分片以\n结束 2。根据分片的情况,计算切点
 	 */
-	public List<Point> blocking(File file, int piece) throws IOException {
+	public static List<Point> blocking(File file, int piece) throws IOException {
 		List<Point> result = new ArrayList<Point>();
 		List<Long> list = new ArrayList<Long>();
 		list.add(-1L);
@@ -167,7 +171,7 @@ public class FileSpliterUtil {
 		long step = length / piece;
 		long index = 0;
 		for (int i = 0; i < piece; i++) {
-			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file), 10 * 1024 * 1024);
 			if (index + step < length) {
 				index = index + step;
 				in.skip(index);
@@ -181,13 +185,13 @@ public class FileSpliterUtil {
 			in.close();
 		}
 		list.add(length - 1);
-		System.out.println(list);
 		for (int i = 0; i < list.size() - 1; i++) {
 			long skipSize = list.get(i) + 1;
 			long l = list.get(i + 1) - list.get(i);
 			result.add(new Point(skipSize, l));
 
 		}
+		System.out.println(list);
 		System.out.println(result);
 		return result;
 	}
@@ -195,7 +199,7 @@ public class FileSpliterUtil {
 	/**
 	 * 切分文件的切点 skipSize指的是从流跳过的size length指的是从流读出的长度
 	 */
-	public class Point {
+	public static class Point {
 		public Point(long skipSize, long length) {
 			if (length > Integer.MAX_VALUE) {
 				throw new RuntimeException("长度溢出");
@@ -224,7 +228,9 @@ public class FileSpliterUtil {
 		
 	public static void main(String[] args) {
 		try {
-			sqlitFileData("G://url_lineout.txt/", "url_lineout", ".txt", "g://url_lineout.txt/split",  20);
+			sqlitFileData("g://url_lineout.txt/", "url_lineout_new", ".txt", "D://",  20);
+//			splitByMappedByteBuffer("F://url_lineout.txt/url_lineout_new.txt", 8, "d://");
+//			System.out.println(blocking(new File("G://url_lineout.txt/url_lineout_new.txt"), 8));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

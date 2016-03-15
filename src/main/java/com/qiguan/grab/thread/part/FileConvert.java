@@ -99,9 +99,18 @@ public class FileConvert {
 					// 抓取内容
 					String [] lineArray = line.split("	");
 					if (null != lineArray && lineArray.length == 3 && null != lineArray[2]) {
+						// 敏感词过滤
 						if (!checkSensitiveWord.isContaintSensitiveWord(lineArray[2])) {
-							// write to anthone file
-							writeFileByLine(fcout, wBuffer, lineArray[2]);
+							// 检查链接是否可用
+//							if (HttpUrlAvailability.isConnect(lineArray[2])) {
+//								// write to anthone file
+								writeFileByLine(fcout, wBuffer, lineArray[2]);
+								logger.info("可用url：" + lineArray[2]);
+//							} else {
+//								logger.info("不可用url：" + lineArray[2]);
+//								// 添加到敏感词库
+//								checkSensitiveWord.add(StringUtil.getDomain(lineArray[2]));
+//							}
 						}
 					}
 					strBuf.delete(0, strBuf.length());
@@ -124,7 +133,6 @@ public class FileConvert {
 		try {
 			// wirte append file on foot
 			fcout.write(wBuffer.wrap((line + "\n").getBytes()), fcout.size());
-			logger.info(line);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
