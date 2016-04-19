@@ -53,6 +53,7 @@ public class ReadFile2Memory {
 		return linesList;
 	}
 	
+	
 	public static void main(String[] args) {
 		List<String> lineList = read("G://url_lineout.txt/url_lineout_clean_1.txt");
 		System.out.println(lineList.size() + ":" + lineList.get(0));

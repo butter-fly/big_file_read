@@ -260,12 +260,42 @@ public class FileUtil {
 		return lines;
 	}
 	
+	/**
+	 * LineNumberReader 类使用示例
+	 */
+	public static void readFromLineFile(String filename) {
+		LineNumberReader lineNumberReader = null;
+		try {
+			// 构造LineNumberReader实例
+			lineNumberReader = new LineNumberReader(new FileReader(filename));
+			lineNumberReader.setLineNumber(4900000);
+			String line = null;
+			while ((line = lineNumberReader.readLine()) != null) {
+				System.out.println("Line " + lineNumberReader.getLineNumber() + " : " + line);
+			}
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			// 关闭lineNumberReader
+			try {
+				if (lineNumberReader != null) {
+					lineNumberReader.close();
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		try {
 //			read("D://grab/file/url_lineout.txt", "D://grab/file/grab_urls.txt");
 //			read("G://url_lineout.txt/url_lineout.txt", "F://url_lineout.txt/url_lineout_clean.txt");
-			readFile("F://url_lineout.txt/url_lineout_new.txt");
-//			System.out.println(getFileLines("G://url_lineout.txt/url_lineout_new.txt"));
+//			readFile("F://url_lineout.txt/url_lineout_new.txt");
+//			System.out.println(getFileLines("G://url_lineout.txt/url_lineout.txt"));
+			readFromLineFile("D://corpus.txt");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

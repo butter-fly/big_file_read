@@ -228,7 +228,7 @@ public class FileSpliterUtil {
 		
 	public static void main(String[] args) {
 		try {
-			sqlitFileData("g://url_lineout.txt/", "url_lineout_new", ".txt", "D://",  20);
+			sqlitFileData("d://url_lineout.txt/", "url_lineout", ".txt", "D://",  4);
 //			splitByMappedByteBuffer("F://url_lineout.txt/url_lineout_new.txt", 8, "d://");
 //			System.out.println(blocking(new File("G://url_lineout.txt/url_lineout_new.txt"), 8));
 		} catch (IOException e) {

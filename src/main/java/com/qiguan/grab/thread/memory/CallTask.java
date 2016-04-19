@@ -90,6 +90,7 @@ public class CallTask implements Callable<List<String>> {
 		String line = null;
 		String domain = null;
 		String result = null;
+		logger.info(Thread.currentThread().getName() +  " ：开始处理数据");
 		while (true) {
 			// 任务List中有任务时进行循环
 			if (itemList != null && itemList.size() > 0) {
@@ -105,7 +106,7 @@ public class CallTask implements Callable<List<String>> {
 					// retList.add(result);
 					grabfw.write(result + "\r\n");
 					grabfw.flush();
-					logger.info(Thread.currentThread().getName() + ":" + result);
+					// logger.info(Thread.currentThread().getName() + ":" + result);
 				}  else {
 					wordfos.write(domain + "\r\n");
 					wordfos.flush();
@@ -130,12 +131,13 @@ public class CallTask implements Callable<List<String>> {
 	 */
 	private String grabTitle(String url, String domain) throws Exception {
 		Document doc = null;
+		Connection con = null;
 		try {
-			Connection con = Jsoup.connect(url);
+			con = Jsoup.connect(url);
 			con.userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
 			doc = con.get();
 		} catch (Exception e) {
-			logger.info("请求异常：" + e.getMessage());
+//			logger.info("请求异常：" + e.getMessage());
 			return null;
 		}
 		if (null == doc) return null;
@@ -157,6 +159,12 @@ public class CallTask implements Callable<List<String>> {
 		}
 		StringBuilder sb = new StringBuilder();
 		sb.append(doc.title()).append("-&-").append(keywords);
+		
+		// 销毁对象
+		con = null;
+		doc = null;
+		System.runFinalization();
+		System.gc();
 		return sb.toString();
 	}
 	

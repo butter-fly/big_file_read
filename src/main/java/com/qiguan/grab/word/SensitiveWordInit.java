@@ -80,9 +80,10 @@ public class SensitiveWordInit {
 			}
 		} catch (Exception e) {
 			throw e;
-		}finally{
+		} finally{
 			read.close();     //关闭文件流
 		}
+		System.out.println("过滤词初始化成功.....");
 		return set;
 	}
 }
