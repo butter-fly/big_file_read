@@ -1,7 +1,12 @@
-package com.qiguan.grab.http;
+package com.qiguan.grab;
 
 import java.io.IOException;
 
+import com.qiguan.grab.http.AsyncHttpCallback;
+import com.qiguan.grab.http.HttpClient;
+import com.qiguan.grab.http.HttpIoException;
+import com.qiguan.grab.http.ResponseTag;
+import com.qiguan.grab.http.StrMap;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
