@@ -29,10 +29,12 @@ public final class Constant {
 	 * 连接超时时间 单位秒(默认10s)
 	 */
 	public static int CONNECT_TIMEOUT = 10;
+	
 	/**
 	 * 写超时时间 单位秒(默认 0 , 不超时)
 	 */
 	public static int WRITE_TIMEOUT = 0;
+	
 	/**
 	 * 回复超时时间 单位秒(默认30s)
 	 */
