@@ -92,7 +92,6 @@ public final class ResponseTag {
 		int code = response.code();
 		String reqId = null;
 		String body = null;
-		System.out.println(ctype(response));
 		if (ctype(response).equals(HttpClient.JsonMime)) {
 			reqId = response.header("X-Reqid");
 			reqId = (reqId == null) ? null : reqId.trim();
@@ -134,13 +133,12 @@ public final class ResponseTag {
 		int code = response.code();
 		String reqId = null;
 		String body = null;
-		System.out.println(ctype(response));
 		if (ctype(response).equals(HttpClient.JsonMime)) {
 			reqId = response.header("X-Reqid");
 			reqId = (reqId == null) ? null : reqId.trim();
 			try {
 				body = response.body().string();
-				if (response.code() >= 400 && !StrUtils.isNullOrEmpty(reqId) && body != null) {
+				if (response.code() >= 400 && body != null) {
 					ErrorBody errorBody = JSONObject.parseObject(body, ErrorBody.class);
 					error = errorBody.error;
 				}
@@ -197,7 +195,7 @@ public final class ResponseTag {
 	 * @return
 	 */
 	public boolean isNetworkBroken() {
-		return statusCode == -1;
+		return (statusCode == -1);
 	}
 
 	/**
