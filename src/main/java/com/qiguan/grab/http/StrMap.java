@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**  
  * <pre>
- * Description	存储请求头header参数
+ * Description	存储请求头header参数(Builder模式)
  * Copyright:	Copyright (c)2016
  * Company:		杭州启冠网络技术有限公司
  * Author:		Administrator
