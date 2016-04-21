@@ -1,8 +1,6 @@
 package com.qiguan.grab.http;
 
 
-// CHECKSTYLE:OFF
-
 /**  
  * <pre>
  * Description	SDK常量数据
