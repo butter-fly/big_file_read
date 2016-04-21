@@ -61,4 +61,12 @@ public final class HttpIoException extends IOException {
 	public String msg() {
 		return response == null ? null : response.message();
 	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Throwable#fillInStackTrace()
+	 */
+	@Override
+	public synchronized Throwable fillInStackTrace() {
+		return this;
+	}
 }
