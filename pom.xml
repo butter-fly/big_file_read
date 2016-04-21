@@ -75,6 +75,18 @@
 			<version>0.9.7376</version>
 		</dependency>
 		
+		<!-- 稳定版本 -->
+		<dependency>
+			<groupId>com.squareup.okhttp</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.9</version>
+		</dependency>
 		
 	</dependencies>
 	<build>
