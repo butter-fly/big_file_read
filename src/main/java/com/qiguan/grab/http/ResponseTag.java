@@ -381,7 +381,7 @@ public final class ResponseTag {
 			this.msg(response.message());
 			this.url(response.request().urlString());
 			// 业务端响应数据
-			if (ctype(response).equals(HttpClient.JsonMime)) {
+			if (ctype(response).equals(HttpClient.Constant.JsonMime)) {
 				try {
 					this.body(response.body().string());
 				} catch (Exception e) {

@@ -37,25 +37,6 @@ import com.squareup.okhttp.Response;
  */
 
 public final class HttpClient {
-	/**
-	 * 返回消息内容类型
-	 */
-	public static final String ContentTypeHeader = "Content-Type";
-	
-	/**
-	 * mine
-	 */
-	public static final String DefaultMime = "application/octet-stream";
-	
-	/**
-	 * 数据类型
-	 */
-	public static final String JsonMime = "application/json";
-	
-	/**
-	 * 表单
-	 */
-	public static final String FormMime = "application/x-www-form-urlencoded";
 	
 	/**
 	 * Http对象
@@ -124,7 +105,7 @@ public final class HttpClient {
 	 */
 	public Response post(String url, String bodyJson, StrMap headers) throws HttpIoException {
 		// MIME类型
-		MediaType mediaType  = MediaType.parse(JsonMime);
+		MediaType mediaType  = MediaType.parse(Constant.JsonMime);
 		RequestBody body = RequestBody.create(mediaType, bodyJson);
 		Request.Builder requestBuilder = new Request.Builder().url(url).post(body);
 		return send(requestBuilder, headers);
@@ -140,7 +121,7 @@ public final class HttpClient {
 	 */
 	public void asyncPost(String url, String bodyJson, StrMap headers, AsyncHttpCallback cb) throws HttpIoException {
 		if (null != url && url.trim().trim().length() == 0) return;
-		MediaType mediaType  = MediaType.parse(JsonMime);
+		MediaType mediaType  = MediaType.parse(Constant.JsonMime);
 		RequestBody body = RequestBody.create(mediaType, bodyJson);
 		Request.Builder requestBuilder = new Request.Builder().url(url).post(body);
 		asyncSend(requestBuilder, headers, cb);
@@ -195,7 +176,7 @@ public final class HttpClient {
 	public Response multipartPost(String url, File file, String mimeType, StrMap headers) throws HttpIoException {
 		MediaType mediaType;
 		if (null == mimeType) {
-			mediaType = MediaType.parse(DefaultMime);
+			mediaType = MediaType.parse(Constant.DefaultMime);
 		} else {
 			mediaType = MediaType.parse(mimeType);
 		}
@@ -231,7 +212,7 @@ public final class HttpClient {
 	public void asyncMultipartPost(String url, File file, String mimeType, StrMap headers, AsyncHttpCallback cb) throws HttpIoException {
 		MediaType mediaType;
 		if (null == mimeType) {
-			mediaType = MediaType.parse(DefaultMime);
+			mediaType = MediaType.parse(Constant.DefaultMime);
 		} else {
 			mediaType = MediaType.parse(mimeType);
 		}
@@ -277,7 +258,7 @@ public final class HttpClient {
 		if (null != paths) {
 			MediaType mediaType;
 			if (null == mimeType) {
-				mediaType = MediaType.parse(DefaultMime);
+				mediaType = MediaType.parse(Constant.DefaultMime);
 			} else {
 				mediaType = MediaType.parse(mimeType);
 			}
@@ -452,7 +433,7 @@ public final class HttpClient {
 	 * 
 	 * </pre>
 	 */ 
-	private final static class Constant {
+	public final static class Constant {
 		
 		 /**
 		 * 版本号
@@ -473,7 +454,17 @@ public final class HttpClient {
 		 * 回复超时时间 单位秒(默认30s)
 		 */
 		public static int RESPONSE_TIMEOUT = 30;
-
+		
+		/**
+		 * mine
+		 */
+		public static final String DefaultMime = "application/octet-stream";
+		
+		/**
+		 * 数据类型
+		 */
+		public static final String JsonMime = "application/json";
+		
 		/**
 		 * 私有化
 		 */
