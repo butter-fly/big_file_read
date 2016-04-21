@@ -21,7 +21,7 @@ import com.squareup.okhttp.Response;
  * 
  * </pre>
  */  
-public class HttpIoException extends IOException {
+public final class HttpIoException extends IOException {
 	
 	/**
 	 * 序列化ID

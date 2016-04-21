@@ -2,7 +2,6 @@ package com.qiguan.grab.http;
 
 import java.io.IOException;
 
-import com.alibaba.fastjson.JSONObject;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Response;
 
@@ -29,14 +28,9 @@ public final class ResponseTag {
 	public final int statusCode;
 	
 	/**
-	 * 扩展头
-	 */
-	public final String reqId;
-
-	/**
 	 * 错误信息
 	 */
-	public final String error;
+	public final String msg;
 	
 	/**
 	 * 请求消耗时间，单位秒
@@ -58,20 +52,34 @@ public final class ResponseTag {
 	 */
 	public final String body;
 	
+	/**
+	 * builder构造
+	 * 
+	 * @param builder
+	 */
+	public ResponseTag(Builder builder) {
+		this.statusCode = builder.statusCode;
+		this.msg = builder.msg;
+		this.duration = builder.duration;
+		this.url = builder.url;
+		this.address = builder.address;
+		this.body = builder.body;
+	}
+	
 	
     /**
-     * @param statusCode
-     * @param reqId
-     * @param error
+     * 
+     * 
+     * @param statusCode http状态码
+     * @param msg 
      * @param duration
      * @param address
      * @param body
      */
-    public ResponseTag(int statusCode, String reqId, String error, long duration, String url, String address, String body) {
+    public ResponseTag(int statusCode, String msg, long duration, String url, String address, String body) {
 		super();
 		this.statusCode = statusCode;
-		this.reqId = reqId;
-		this.error = error;
+		this.msg = msg;
 		this.duration = duration;
 		this.url = url;
 		this.address = address;
@@ -87,78 +95,68 @@ public final class ResponseTag {
 	 * @param duration
 	 * @return
 	 */
-	public static ResponseTag create(Response response, String address, long duration) {
-		String error = response.message();
-		int code = response.code();
-		String reqId = null;
-		String body = null;
-		if (ctype(response).equals(HttpClient.JsonMime)) {
-			reqId = response.header("X-Reqid");
-			reqId = (reqId == null) ? null : reqId.trim();
-			try {
-				body = response.body().string();
-				// if (response.code() >= 400 && !StringUtils.isNullOrEmpty(reqId) && content != null) {
-				if (response.code() >= 400  && body != null) {
-					ErrorBody errorBody = JSONObject.parseObject(body, ErrorBody.class);
-					error = errorBody.error;
-				}
-			} catch (Exception e) {
-				if (response.code() < 300) {
-					error = e.getMessage();
-				}
-			} finally {
-				try {
-					// 关闭Body
-					if (null != response.body()) {
-						response.body().close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return new ResponseTag(code, reqId, error, duration, response.request().urlString(), address, body);
-	}
+//	public static ResponseTag create(Response response, String address, long duration) {
+//		String msg = null;
+//		int code = response.code();
+//		String body = null;
+//		if (ctype(response).equals(HttpClient.JsonMime)) {
+//			try {
+//				body = response.body().string();
+//				// if (response.code() >= 400 && !StringUtils.isNullOrEmpty(reqId) && content != null) {
+//				msg = response.message();
+//			} catch (Exception e) {
+//				if (response.code() < 300) {
+//					msg = e.getMessage();
+//				}
+//			} finally {
+//				try {
+//					// 关闭Body
+//					if (null != response.body()) {
+//						response.body().close();
+//					}
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//		return new ResponseTag(code, msg, duration, response.request().urlString(), address, body);
+//	}
 	
-	/**
+	/** 响应出错返回信息创建
+	 * 
 	 * @param response
 	 * @param address
 	 * @param duration
 	 * @return
 	 */
-	public static ResponseTag createError(Response response, String address, long duration, String error) {
-		if (response == null) {
-			return new ResponseTag(-1, "", error, duration, null, null, null);
-		}
-		int code = response.code();
-		String reqId = null;
-		String body = null;
-		if (ctype(response).equals(HttpClient.JsonMime)) {
-			reqId = response.header("X-Reqid");
-			reqId = (reqId == null) ? null : reqId.trim();
-			try {
-				body = response.body().string();
-				if (response.code() >= 400 && body != null) {
-					ErrorBody errorBody = JSONObject.parseObject(body, ErrorBody.class);
-					error = errorBody.error;
-				}
-			} catch (Exception e) {
-				if (response.code() < 300) {
-					error = e.getMessage();
-				}
-			} finally {
-				try {
-					// 关闭Body
-					if (null != response.body()) {
-						response.body().close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return new ResponseTag(code, reqId, error, duration, response.request().urlString(), address, body);
-	}
+//	public static ResponseTag createError(Response response, String address, long duration, String msg) {
+//		if (response == null) {
+//			return new ResponseTag(-1, msg, duration, null, null, null);
+//		}
+//		int code = response.code();
+//		String body = null;
+//		if (ctype(response).equals(HttpClient.JsonMime)) {
+//			try {
+//				body = response.body().string();
+//				msg = response.message();
+//			} catch (Exception e) {
+//				if (response.code() < 300) {
+//					msg = e.getMessage();
+//				}
+//			} finally {
+//				try {
+//					// 关闭Body
+//					if (null != response.body()) {
+//						response.body().close();
+//					}
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//		return new ResponseTag(code,  msg, duration, response.request().urlString(), address, body);
+//	}
+	
 	/**
 	 * @param response
 	 * @return
@@ -177,7 +175,7 @@ public final class ResponseTag {
 	 * @return
 	 */
 	public boolean isOK() {
-		return statusCode == 200 && error == null && reqId != null && reqId.length() > 0;
+		return statusCode == 200 && msg != null && "ok".equalsIgnoreCase(msg);
 	}
 
 	/**
@@ -213,17 +211,18 @@ public final class ResponseTag {
 	 * @return
 	 */
 	public boolean needRetry() {
-		return isNetworkBroken() || isServerError() || statusCode == 406 || (statusCode == 200 && error != null);
+		return isNetworkBroken() || isServerError() || statusCode == 406 || (statusCode == 200 && msg != null && !"ok".equalsIgnoreCase(msg));
 	}
-
+	
+	
 	/**  
 	 * <pre>
-	 * Description
+	 * Description	构造参数以build模式创建
 	 * Copyright:	Copyright (c)2016
 	 * Company:		杭州启冠网络技术有限公司
 	 * Author:		Administrator
 	 * Version: 	1.0
-	 * Create at:	2016年4月19日 下午5:49:43  
+	 * Create at:	2016年4月21日 上午9:54:59  
 	 *  
 	 * Modification History:  
 	 * Date         Author      Version     Description 
@@ -231,7 +230,176 @@ public final class ResponseTag {
 	 * 
 	 * </pre>
 	 */  
-	public static class ErrorBody {
-		public String error;
+	public static class Builder {
+		
+		/**
+		 * HTTP响应
+		 */
+		private Response response;
+		
+		/**
+		 * 回复状态码
+		 */
+		public int statusCode;
+		
+		/**
+		 * 错误信息
+		 */
+		public String msg;
+		
+		/**
+		 * 请求消耗时间，单位秒
+		 */
+		public long duration;
+		
+		/**
+		 * 请求的Url
+		 */
+		public String url;
+		
+		/**
+		 * 服务器IP
+		 */
+		public String address;
+		
+		/**
+		 * 响应Body
+		 */
+		public String body;
+		
+		/**
+		 * 构建this对象
+		 * 
+		 * @param response
+		 */
+		public Builder() {
+			
+		}
+		
+		/**
+		 * 构造Response
+		 * 
+		 * @param statusCode
+		 * @return
+		 */
+		public Builder response(Response response) {
+			this.response = response;
+			return this;
+		}
+		
+		/**
+		 * 构造状态码
+		 * 
+		 * @param statusCode
+		 * @return
+		 */
+		public Builder statusCode(int statusCode) {
+			this.statusCode = statusCode;
+			return this;
+		}
+		
+		/**
+		 * 构造响应耗时
+		 * 
+		 * @param duration
+		 * @return
+		 */
+		public Builder duration(long duration) {
+			this.duration = duration;
+			return this;
+		}
+		
+		/**
+		 * 构造响应信息
+		 * 
+		 * @param msg
+		 * @return
+		 */
+		public Builder msg(String msg) {
+			this.msg = msg;
+			return this;
+		}
+		
+		/**
+		 * 构造请求url
+		 * 
+		 * @param url
+		 * @return
+		 */
+		public Builder url(String url) {
+			this.url = url;
+			return this;
+		}
+		
+		/**
+		 * 构造请求address
+		 * 
+		 * @param address
+		 * @return
+		 */
+		public Builder address(String address) {
+			this.address = address;
+			return this;
+		}
+		
+		/**
+		 * 构造请求body
+		 * 
+		 * @param body
+		 * @return
+		 */
+		public Builder body(String body) {
+			this.body = body;
+			return this;
+		}
+
+		
+		/**
+		 * 构造入口
+		 * 
+		 * @return 响应标签
+		 */
+		public ResponseTag build() {
+			return new ResponseTag(this);
+		}
+		
+		/**
+		 * 创建正常响应对象
+		 * 
+		 * @param response
+		 * @param address
+		 * @param duration
+		 * @return
+		 */
+		public Builder create() {
+			if (null == this.response) {
+				this.statusCode = -1;
+				return this;
+			}
+			// 服务器端状态及响应信息
+			this.statusCode(response.code());
+			this.msg(response.message());
+			this.url(response.request().urlString());
+			// 业务端响应数据
+			if (ctype(response).equals(HttpClient.JsonMime)) {
+				try {
+					this.body(response.body().string());
+				} catch (Exception e) {
+					if (response.code() < 300) {
+						this.msg(e.getMessage());
+					}
+				} finally {
+					try {
+						// 关闭Body
+						if (null != response.body()) {
+							response.body().close();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			return this;
+		}
 	}
 }

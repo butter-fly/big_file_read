@@ -36,7 +36,7 @@ import com.squareup.okhttp.Response;
  * </pre>
  */
 
-public class HttpClient {
+public final class HttpClient {
 	/**
 	 * 返回消息内容类型
 	 */
@@ -252,7 +252,7 @@ public class HttpClient {
 	 * @throws HttpIoException
 	 */
 	private Response multipartPost(String url, String name, String fileName, RequestBody requestBody, StrMap headers) throws HttpIoException {
-		final MultipartBuilder mb = new MultipartBuilder();
+		final MultipartBuilder mb = new MultipartBuilder().type(MultipartBuilder.FORM);
 		mb.addFormDataPart(name, fileName, requestBody);
 		mb.type(MediaType.parse("multipart/form-data"));
 		RequestBody body = mb.build();
@@ -312,7 +312,7 @@ public class HttpClient {
 	 * @param cb
 	 */
 	private void asyncMultipartPost(String url, StrMap fields, String name, String fileName, RequestBody requestBody, StrMap headers, AsyncHttpCallback cb) {
-		final MultipartBuilder mb = new MultipartBuilder();
+		final MultipartBuilder mb = new MultipartBuilder().type(MultipartBuilder.FORM);;
 		mb.addFormDataPart(name, fileName, requestBody);
 		if (null != fields) {
 			fields.forEach(new StrMap.Consumer() {
@@ -386,6 +386,7 @@ public class HttpClient {
 				}
 			});
 		}
+		 requestBuilder.header("Authorization", "Client-ID ");
 		// 用户代理
 		requestBuilder.header("User-Agent", userAgent());
 		final long start = System.currentTimeMillis();
@@ -399,7 +400,7 @@ public class HttpClient {
 			@Override
 			public void onFailure(Request request, IOException e) {
 				long duration = (System.currentTimeMillis() - start) / 1000;
-				cb.complete(ResponseTag.createError(null, "", duration, e.getMessage()));
+				cb.complete(new ResponseTag.Builder().statusCode(-1).address(tag.ip).url(request.urlString()).duration(duration).msg(e.getMessage()).build());
 			}
 
 			/* (non-Javadoc)
@@ -409,7 +410,7 @@ public class HttpClient {
 			public void onResponse(com.squareup.okhttp.Response response) throws IOException {
 				long duration = (System.currentTimeMillis() - start) / 1000;
 				// 用于回调
-				cb.complete(ResponseTag.create(response, tag.ip, duration));
+				cb.complete(new ResponseTag.Builder().response(response).address(tag.ip).duration(duration).create().build());
 			}
 		});
 	 }

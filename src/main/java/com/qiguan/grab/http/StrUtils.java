@@ -3,7 +3,7 @@ package com.qiguan.grab.http;
 
 /**
  * <pre>
- * Description	字符串连接工具类
+ * Description	字符串连接工具类(注意独立性)
  * Copyright:	Copyright (c)2016
  * Company:		杭州启冠网络技术有限公司
  * Author:		Administrator
