@@ -54,5 +54,11 @@ public final class HttpIoException extends IOException {
 	public int code() {
 		return response == null ? -1 : response.code();
 	}
-
+	
+	/**
+	 * @return
+	 */
+	public String msg() {
+		return response == null ? null : response.message();
+	}
 }
