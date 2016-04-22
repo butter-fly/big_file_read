@@ -110,42 +110,69 @@ public final class StrMap {
 		return this;
 	}
 
+	/**
+	 * @param map
+	 * @return
+	 */
 	public StrMap putAll(StrMap map) {
 		this.map.putAll(map.map);
 		return this;
 	}
 
+	/**
+	 * 循环遍历存储数据
+	 * 
+	 * @param imp
+	 */
 	public void forEach(Consumer imp) {
 		for (Map.Entry<String, Object> i : map.entrySet()) {
 			imp.accept(i.getKey(), i.getValue());
 		}
 	}
 
+	/**
+	 * 集合大小
+	 * 
+	 * @return
+	 */
 	public int size() {
 		return map.size();
 	}
 
+	/**
+	 * @return
+	 */
 	public Map<String, Object> map() {
 		return this.map;
 	}
 
+	/**
+	 * @param key
+	 * @return
+	 */
 	public Object get(String key) {
 		return map.get(key);
 	}
 
+	/**
+	 * Map格式化成表单格式数据
+	 * 
+	 * @return
+	 */
 	public String formString() {
 		final StringBuilder b = new StringBuilder();
 		forEach(new Consumer() {
 			private boolean notStart = false;
-
+			/* (non-Javadoc)
+			 * @see com.qiguan.grab.http.StrMap.Consumer#accept(java.lang.String, java.lang.Object)
+			 */
 			@Override
 			public void accept(String key, Object value) {
 				if (notStart) {
 					b.append("&");
 				}
 				try {
-					b.append(URLEncoder.encode(key, "UTF-8")).append('=')
-							.append(URLEncoder.encode(value.toString(), "UTF-8"));
+					b.append(URLEncoder.encode(key, "UTF-8")).append('=').append(URLEncoder.encode(value.toString(), "UTF-8"));
 				} catch (UnsupportedEncodingException e) {
 					throw new AssertionError(e);
 				}
@@ -155,6 +182,21 @@ public final class StrMap {
 		return b.toString();
 	}
 
+	/**  
+	 * <pre>
+	 * Description	数据接口
+	 * Copyright:	Copyright (c)2016
+	 * Company:		杭州启冠网络技术有限公司
+	 * Author:		Administrator
+	 * Version: 	1.0
+	 * Create at:	2016年4月22日 上午9:24:55  
+	 *  
+	 * Modification History:  
+	 * Date         Author      Version     Description 
+	 * ------------------------------------------------------------------  
+	 * 
+	 * </pre>
+	 */  
 	public interface Consumer {
 		void accept(String key, Object value);
 	}

@@ -62,9 +62,9 @@ public final class HttpClient {
 			 * @see com.squareup.okhttp.Interceptor#intercept(com.squareup.okhttp.Interceptor.Chain)
 			 */
 			@Override
-			public com.squareup.okhttp.Response intercept(Chain chain) throws IOException {
+			public Response intercept(Chain chain) throws IOException {
 				Request request = chain.request();
-				com.squareup.okhttp.Response response = chain.proceed(request);
+				Response response = chain.proceed(request);
 				IpTag tag = (IpTag) request.tag();
 				String ip = chain.connection().getSocket().getRemoteSocketAddress().toString();
 				tag.ip = ip;
@@ -273,6 +273,7 @@ public final class HttpClient {
 				}
 			});
 		}
+		// 上传二进制数据协议
 		mb.type(MediaType.parse("multipart/form-data"));
 		// 构建请求体
 		RequestBody requestBody = mb.build();
@@ -333,18 +334,18 @@ public final class HttpClient {
 			});
 		}
 		requestBuilder.header("User-Agent", userAgent());
-		Response res = null;
+		Response response = null;
 		IpTag tag = new IpTag();
 		try {
-			res = httpClient.newCall(requestBuilder.tag(tag).build()).execute();
+			response = httpClient.newCall(requestBuilder.tag(tag).build()).execute();
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new HttpIoException(e);
 		}
-		if (res.code() >= 300) {
-			throw new HttpIoException(res);
+		if (response.code() >= 300) {
+			throw new HttpIoException(response);
 		}
-		return res;
+		return response;
 	}
 	
 	 /**
@@ -367,7 +368,7 @@ public final class HttpClient {
 				}
 			});
 		}
-		 requestBuilder.header("Authorization", "Client-ID ");
+//		requestBuilder.header("Authorization", "Client-ID ");
 		// 用户代理
 		requestBuilder.header("User-Agent", userAgent());
 		final long start = System.currentTimeMillis();
@@ -388,7 +389,7 @@ public final class HttpClient {
 			 * @see com.squareup.okhttp.Callback#onResponse(com.squareup.okhttp.Response)
 			 */
 			@Override
-			public void onResponse(com.squareup.okhttp.Response response) throws IOException {
+			public void onResponse(Response response) throws IOException {
 				long duration = (System.currentTimeMillis() - start) / 1000;
 				// 用于回调
 				cb.complete(new ResponseTag.Builder().response(response).address(tag.ip).duration(duration).create().build());
