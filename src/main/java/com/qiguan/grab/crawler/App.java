@@ -32,7 +32,7 @@ public class App {
 	
 	
 	/**
-	 * 工作线程数目11111111
+	 * 工作线程数目
 	 */
 	private static int numberOfCrawlers = 10;
 	
