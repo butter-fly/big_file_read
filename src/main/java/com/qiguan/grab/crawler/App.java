@@ -30,8 +30,9 @@ public class App {
 	 */
 	private static String dataCrawlStorageFolder = null;
 	
+	
 	/**
-	 * 工作线程数目
+	 * 工作线程数目11111111
 	 */
 	private static int numberOfCrawlers = 10;
 	
